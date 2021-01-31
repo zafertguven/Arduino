@@ -1,0 +1,83 @@
+/*
+ * Merhaba ben Zafer GÜVEN.
+ * Elektronik Haberleşme Teknolojisi mezunuyum.
+ * Hobi olarak yazılım ve arduino ile uğraşmaktayım.
+ * İlham aldığım kişi "AARON SWARTZ" dır.
+ * AARON SWARTZ ın dediği gibi "Bilgiye erişim ücretsiz olmalıdır."
+ * Bu yüzden yaptığım projelerimi sizler ile paylaşmaya karar verdim.
+ * Aşağıda bulunan linkten yazılımlarıma ulaşabilirsiniz.
+ * https://github.com/zafertguven/Arduino
+ * Lütfen şu sözü nutmayın "Bilgi paylaştıkça çoğalır."
+ */
+
+#include <SD.h> // Sd kart kutuphanesi
+#define SD_ChipSelectPin 2   // cs pini
+#include <TMRpcm.h> // waw okuma kutuphanesi
+#include <SPI.h>// seri haberleşme kütüphanesi
+#include "Wire.h"
+#include <TEA5767Radio.h>
+TEA5767Radio radio = TEA5767Radio();
+
+TMRpcm tmrpcm; 
+String voice;
+int
+led1 = 5, //led 1 pin 5 e
+led2 = 6, //led 2 pin 6'ya
+led3 = 7; //led 3 pin 7'ye
+
+void setup() {
+  { 
+  Wire.begin();
+  radio.setFrequency(93.0); // pick your own frequency
+  }
+  pinMode(SD_ChipSelectPin,OUTPUT);
+  Serial.begin(9600);
+  tmrpcm.speakerPin = 8;
+  tmrpcm.volume(100);
+  Serial.begin(9600);
+ if (!SD.begin(SD_ChipSelectPin)) { 
+ Serial.println("SD okuyamadi"); 
+ return; }
+ 
+pinMode(led1, OUTPUT);
+pinMode(led2, OUTPUT);
+pinMode(led3, OUTPUT);
+pinMode(11,OUTPUT);
+digitalWrite(led1, LOW);
+digitalWrite(led2, LOW);
+digitalWrite(led3, LOW);
+tmrpcm.play("1.wav");
+}
+//-----------------------------------------------------------------------//
+void loop() {
+while (Serial.available()){
+delay(10);
+char c = Serial.read();
+if (c == '#') {break;}
+voice += c;
+}
+if (voice.length() >= 0) {
+Serial.println(voice);
+//-----------------------------------------------------------------------//
+if(voice == "*adın ne"){ tmrpcm.play("2.wav");} 
+ else if(voice == "*hoşçakal"){ tmrpcm.play("3.wav");}
+ else if(voice == "*iyi geceler"){ tmrpcm.play("4.wav");}
+ else if(voice == "*ben kimim"){ tmrpcm.play("5.wav");}
+ else if(voice == "*nerelisin"){ tmrpcm.play("6.wav");}
+ else if(voice == "*uykum geldi"){ tmrpcm.play("7.wav");}
+ else if(voice == "*teşekkürler"){ tmrpcm.play("8.wav");}
+ else if(voice == "*lambayı aç") {digitalWrite(5, HIGH); tmrpcm.play("9.wav");}
+ else if(voice == "*lambayı kapat") {digitalWrite(5, LOW); tmrpcm.play("10.wav");} 
+ else if(voice == "*bilgisayarı aç") {digitalWrite(4, HIGH); delay(50); digitalWrite(4, LOW); tmrpcm.play("11.wav");} //50ms içinde tuşa basıp çeker
+ else if(voice == "*masa lambasını aç") {digitalWrite(6, HIGH); tmrpcm.play("12.wav");}
+ else if(voice == "*masa lambasını kapat") {digitalWrite(6, LOW); tmrpcm.play("13.wav");}
+ else if(voice == "*fanı aç") {digitalWrite(6, HIGH); tmrpcm.play("14.wav");}
+ else if(voice == "*fanı kapat") {digitalWrite(6, LOW); tmrpcm.play("15.wav");} 
+ else if(voice == "*hepsini aç") {digitalWrite(3, HIGH); digitalWrite(5, HIGH); digitalWrite(6, HIGH); tmrpcm.play("16.wav");}
+ else if(voice == "*hepsini kapat") {digitalWrite(3, LOW); digitalWrite(5, LOW); digitalWrite(6, LOW); tmrpcm.play("17.wav");}
+ else {tmrpcm.play("geri.wav");  }
+//-----------------------------------------------------------------------//
+voice="";
+delay(1000); // every second
+}
+}
