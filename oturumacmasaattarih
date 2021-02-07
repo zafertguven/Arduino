@@ -1,0 +1,88 @@
+/*
+ * Merhaba ben Zafer GÜVEN.
+ * Elektronik Haberleşme Teknolojisi mezunuyum.
+ * Hobi olarak yazılım ve arduino ile uğraşmaktayım.
+ * İlham aldığım kişi "AARON SWARTZ" dır.
+ * AARON SWARTZ ın dediği gibi "Bilgiye erişim ücretsiz olmalıdır."
+ * Bu yüzden yaptığım projelerimi sizler ile paylaşmaya karar verdim.
+ * Aşağıda bulunan linkten yazılımlarıma ulaşabilirsiniz.
+ * https://github.com/zafertguven/Arduino
+ * Lütfen şu sözü nutmayın "Bilgi paylaştıkça çoğalır."
+ */
+#include <SPI.h>      //SPI ve RFID kütüphanelerimizi ekliyoruz
+#include <RFID.h>
+#include <Keyboard.h>
+#include <virtuabotixRTC.h>
+#include <LiquidCrystal_I2C_AvrI2C.h>
+#define SS_PIN 10
+#define RST_PIN 9
+//RTC bağlantı pinleri
+//CLK -> 5, Data -> 6, RST -> 7
+virtuabotixRTC RTCSaat(5, 6, 7);
+LiquidCrystal_I2C_AvrI2C lcd(0x27,16,2);
+int saat,dakika,saniye,gun,ay,yil;
+
+RFID rfid(SS_PIN, RST_PIN);
+ 
+void setup()
+{
+  SPI.begin();           //SPI iletişimini başlatıyoruz 
+  rfid.init();
+  Keyboard.begin();      //Klavye olarak kullanmak için bu özelliği açıyoruz.
+  lcd.begin(); //lcd'yi başlatıyoruz
+  lcd.backlight(); //lcd arka ışığını açıyoruz.
+  // RTC üzerindeki tarih ve saati aşağıdaki kod ile ayarlayabilirsiniz.
+  // saniye, dakika, saat, haftanın günü, ayın günü, ay, yıl 
+  //(haftanın günü pazartesi için 1 yazıyoruz.)
+  //RTCSaat.setDS1302Time(00, 44,15,7, 07, 02, 2021);
+}
+
+void loop()
+{
+  RTCSaat.updateTime(); //Bu kod ile RTC deki anlık zamanı alıyoruz.
+saat=RTCSaat.hours;
+dakika=RTCSaat.minutes;
+saniye=RTCSaat.seconds;
+gun=RTCSaat.dayofmonth;
+ay=RTCSaat.month;
+yil=RTCSaat.year;
+
+char date[10]; 
+sprintf (date,"%02d/%02d/%02d",gun,ay,yil);
+char zaman[9]; 
+sprintf (zaman,"%02d:%02d:%02d",saat,dakika,saniye);
+
+// Tarih ve Saat bilgisini LCD ekrana yazdırıyoruz.
+lcd.setCursor(0,0);
+lcd.print("Tarih:");
+lcd.setCursor(6,0);
+lcd.print(date);
+lcd.setCursor(0,1);
+lcd.print("Saat:");
+lcd.setCursor(5,1);
+lcd.print(zaman);
+
+delay( 1000); // 1 saniye bekletiyoruz.
+
+    if (rfid.isCard()) {                 //Yeni bir RFID kart okundu mu onu kontrol ediyoruz
+        if (rfid.readCardSerial()) {
+            if (rfid.serNum[0] == 246        //Okunan RFID kartının bize özel kart olup olmadığı RFID kart numarasının ilk 4 hanesi ile kontrol ediliyor.
+                && rfid.serNum[1] == 242      //Buradaki 4 adet sayıyı kendi kartınızın sayıları ile değiştirmeniz gerekecek.
+                && rfid.serNum[2] == 21
+                && rfid.serNum[3] == 248
+            ) {               
+              Keyboard.press(KEY_RETURN);    //Klavyeden ENTER tuşuna basıyoruz
+              delay(50);
+              Keyboard.releaseAll();          //Basılı olan tuşu geri çekmek için bu fonksiyonu kullanıyoruz. Bu fonksiyon olmazsa enter tuşu hep basılıkalıyor
+              delay(500);
+              Keyboard.print("asd11q2e");    //Buraya Bilgisayar şifreniz gelecek
+              delay(500);
+              Keyboard.press(KEY_RETURN);    //Klavyeden ENTER tuşuna basıyoruz
+              delay(50);
+              Keyboard.releaseAll();
+              delay(50);
+             }
+          }
+    }
+  rfid.halt();
+}
